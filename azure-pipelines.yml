@@ -1,0 +1,59 @@
+variables:
+  majorVersion: '1.5.1'
+  minorVersion: $[counter('minorVersion', 1)]
+  fpcalcVersion: '$(majorVersion).$(minorVersion)'
+
+trigger:
+  branches:
+    include:
+    - master
+
+pr:
+  branches:
+    include:
+    - master
+
+stages:
+  - stage: Setup
+    displayName: Setup
+    jobs:
+      - job:
+        displayName: Build Variables
+        pool:
+          vmImage: 'ubuntu-20.04'
+        steps:
+          # Set the build name properly.  The 'name' property won't recursively expand so hack here:
+          - bash: echo "##vso[build.updatebuildnumber]$FPCALCVERSION"
+            displayName: Set Build Name
+
+  - stage: fpcalc
+    displayName: Build Fpcalc
+    jobs:
+      - job: build
+        strategy:
+          matrix:
+            linux-x64:
+              folder: 'linux-x64'
+              poolName: 'Azure Pipelines'
+              imageName: 'ubuntu-20.04'
+            linux-arm:
+              folder: 'linux-arm'
+              poolName: 'Azure Pipelines'
+              imageName: 'ubuntu-20.04'
+            linux-arm64:
+              folder: 'linux-arm64'
+              poolName: 'Azure Pipelines'
+              imageName: 'ubuntu-20.04'
+        pool:
+          name: $(poolName)
+          vmImage: $(imageName)
+        steps:
+          - checkout: self
+            submodules: true
+            fetchDepth: 1
+          - bash: |
+              ${FOLDER}/build.sh
+            displayName: Build
+          - publish: $(folder)/output/chromaprint/bin
+            artifact: fpcalc-$(folder)
+            displayName: Publish Fpcalc
