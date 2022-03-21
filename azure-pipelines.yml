@@ -44,6 +44,10 @@ stages:
               folder: 'linux-arm64'
               poolName: 'Azure Pipelines'
               imageName: 'ubuntu-20.04'
+            win-x86:
+              folder: 'win-x86'
+              poolName: 'Azure Pipelines'
+              imageName: 'ubuntu-20.04'
         pool:
           name: $(poolName)
           vmImage: $(imageName)
